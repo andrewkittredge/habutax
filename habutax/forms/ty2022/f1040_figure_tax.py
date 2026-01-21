@@ -2068,7 +2068,6 @@ TAX_TABLE = (
 
 TAX_WORKSHEET_VALUES = (
     # income min (inclusive), income max (exclusive), multiplication amount (b), subtraction amount (d)
-
     # Single
     (
         (100000, 170050, 0.24, 6164.50),
@@ -2076,7 +2075,6 @@ TAX_WORKSHEET_VALUES = (
         (215950, 539900, 0.35, 26247.00),
         (539900, 1000000000000, 0.37, 37045.00),
     ),
-
     # Married filing jointly or Qualifying surviving spouse
     (
         (100000, 178150, 0.22, 8766.00),
@@ -2101,6 +2099,7 @@ TAX_WORKSHEET_VALUES = (
     ),
 )
 
+
 def figure_tax_table(taxable_amount, filing_status_column):
     for row in TAX_TABLE:
         if taxable_amount >= row[0] and taxable_amount < row[1]:
@@ -2109,12 +2108,15 @@ def figure_tax_table(taxable_amount, filing_status_column):
     # If we got here, something went wrong
     assert False
 
+
 def figure_tax_worksheet(taxable_amount, filing_status_index):
     # Note: The first row of the tax computation worksheet tables reads "At
     # least $..." for the lower bound, the other rows read "over $..."
     first_row = True
-    for row in TAX_WORKSHEET_VALUES[filing_status_index-2]:
-        meets_lower_bound = taxable_amount >= row[0] if first_row else taxable_amount > row[0]
+    for row in TAX_WORKSHEET_VALUES[filing_status_index - 2]:
+        meets_lower_bound = (
+            taxable_amount >= row[0] if first_row else taxable_amount > row[0]
+        )
         if meets_lower_bound and taxable_amount <= row[1]:
             return taxable_amount * row[2] - row[3]
         first_row = False
@@ -2122,11 +2124,15 @@ def figure_tax_worksheet(taxable_amount, filing_status_index):
     # If we got here, something went wrong
     assert False
 
+
 def figure_tax(taxable_amount, filing_status):
     filing_status_index = None
     if filing_status is filing_status.Single:
         filing_status_index = 2
-    elif filing_status in [filing_status.MarriedFilingJointly, filing_status.QualifyingSurvivingSpouse]:
+    elif filing_status in [
+        filing_status.MarriedFilingJointly,
+        filing_status.QualifyingSurvivingSpouse,
+    ]:
         filing_status_index = 3
     elif filing_status is filing_status.MarriedFilingSeparately:
         filing_status_index = 4

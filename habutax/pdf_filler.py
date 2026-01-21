@@ -19,12 +19,13 @@ trailer
 %%EOF;
 """
 
+
 class PDFFiller(object):
     def __init__(self, solution, available_forms, outfilename, flatten=True):
         self._solution = solution
         self._form_map = {f.form_name: f for f in available_forms}
         self._output_filename = outfilename
-        self._pdftk = 'pdftk'
+        self._pdftk = "pdftk"
         self._flatten = flatten
 
         # Instances of Forms in the solution, and fields belonging to those
@@ -39,23 +40,25 @@ class PDFFiller(object):
         # Read values in as their types from solution file's string
         # representation
         for field_name in self._solution[form_name]:
-            full_name = f'{form_name}.{field_name}'
+            full_name = f"{form_name}.{field_name}"
             string = self._solution[form_name][field_name]
             field = self._field_map[full_name]
             self._values[full_name] = field.from_string(string)
 
     def _add_form(self, full_form_name):
-        split_form_name = full_form_name.split(':')
+        split_form_name = full_form_name.split(":")
         form_instance = None
         if len(split_form_name) == 2:
             form_name = split_form_name[0]
             form_instance = split_form_name[1]
         elif len(split_form_name) != 1:
-            raise RuntimeError(f'Unexpected form name: {form_name} (expected 0 or 1 colons)')
+            raise RuntimeError(
+                f"Unexpected form name: {form_name} (expected 0 or 1 colons)"
+            )
         form_name = split_form_name[0]
 
         if form_name not in self._form_map:
-            raise NotImplementedError(f'Form {form_name} is not supported.')
+            raise NotImplementedError(f"Form {form_name} is not supported.")
 
         form = self._form_map[form_name](instance=form_instance)
         self.forms.append(form)
@@ -69,8 +72,8 @@ class PDFFiller(object):
     def _create_fdf(self, data, filename):
         lines = []
         for k, v in data.items():
-            lines.append(f'<< /T ({k}) /V ({v}) >>')
-        with open(filename, 'w') as fdf:
+            lines.append(f"<< /T ({k}) /V ({v}) >>")
+        with open(filename, "w") as fdf:
             fdf.write(fdf_header)
             fdf.write("\n".join(lines))
             fdf.write(fdf_footer)
@@ -84,10 +87,12 @@ class PDFFiller(object):
         for pdf_field in form.pdf_fields():
             field_name = pdf_field.field_name
             if "." not in field_name:
-                field_name = f'{form.name()}.{field_name}'
+                field_name = f"{form.name()}.{field_name}"
 
             if field_name not in self._field_map:
-                raise RuntimeError(f'PDF filler found a field absent from the specification of any supplied form: {field_name} in form {form.name()}')
+                raise RuntimeError(
+                    f"PDF filler found a field absent from the specification of any supplied form: {field_name} in form {form.name()}"
+                )
             try:
                 value = self._values[field_name]
                 field = self._field_map[field_name]
@@ -97,18 +102,25 @@ class PDFFiller(object):
                 string_value = ""
             fdf_map[pdf_field.pdf_field_name] = string_value
 
-        fdf_filename = f'{pdf_filename}.fdf'
+        fdf_filename = f"{pdf_filename}.fdf"
         self._create_fdf(fdf_map, fdf_filename)
 
-        cmd = [self._pdftk, form.pdf_file(), 'fill_form', fdf_filename, 'output', pdf_filename]
+        cmd = [
+            self._pdftk,
+            form.pdf_file(),
+            "fill_form",
+            fdf_filename,
+            "output",
+            pdf_filename,
+        ]
         if self._flatten:
-            cmd.append('flatten')
+            cmd.append("flatten")
         res = subprocess.run(cmd, check=True)
 
     def fill(self):
         for form_name in self._solution:
             # Ignore this artifact of ConfigParser
-            if form_name == 'DEFAULT':
+            if form_name == "DEFAULT":
                 continue
             self._add_form(form_name)
 
@@ -122,11 +134,11 @@ class PDFFiller(object):
         with tempfile.TemporaryDirectory() as tmpdirname:
             for form in filling_forms:
                 if form.needs_filing(self._values):
-                    pdf_filename = os.path.join(tmpdirname, f'{form.name()}.pdf')
+                    pdf_filename = os.path.join(tmpdirname, f"{form.name()}.pdf")
                     self._fill_form(form, pdf_filename)
                     pdfs.append(pdf_filename)
 
             cmd = [self._pdftk]
             cmd.extend(pdfs)
-            cmd.extend(['cat', 'output', self._output_filename])
+            cmd.extend(["cat", "output", self._output_filename])
             res = subprocess.run(cmd, check=True)

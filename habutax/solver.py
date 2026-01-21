@@ -3,6 +3,7 @@ from habutax import form
 from habutax import inputs
 from habutax import values
 
+
 class DependencyTracker(object):
     def __init__(self):
         # map names of unmet dependencies to a list of their outstanding
@@ -21,7 +22,7 @@ class DependencyTracker(object):
 
     def has_met(self):
         """Return True if there are met dependencies which have not been
-        removed by calling met_dependents()""" 
+        removed by calling met_dependents()"""
         return len(self._met) > 0
 
     def has_unmet(self):
@@ -66,28 +67,28 @@ class DependencyTracker(object):
                 self._met.pop(0)
                 continue
 
+
 def _sort_keys(key):
     last_numeric = False
     last_alpha = False
-    current = ''
+    current = ""
     keys = []
 
     for c in key:
-        this_numeric = c in '01234567890'
+        this_numeric = c in "01234567890"
         this_alpha = c.isalpha()
-        if (last_numeric and not this_numeric) or \
-                (last_alpha and not this_alpha):
+        if (last_numeric and not this_numeric) or (last_alpha and not this_alpha):
             if len(current) > 0:
                 if last_numeric:
                     keys.append((False, int(current)))
                 else:
                     keys.append((True, current))
-                current = ''
+                current = ""
 
         if this_numeric or this_alpha:
             current += c
         else:
-            current = ''
+            current = ""
 
         last_numeric = this_numeric
         last_alpha = this_alpha
@@ -101,15 +102,17 @@ def _sort_keys(key):
 
     return keys
 
+
 def sort_keys(key):
     if isinstance(key, fields.Field) or isinstance(key, inputs.Input):
         key = key.name()
 
-    if '.' in key:
-        form, key = key.split('.')
+    if "." in key:
+        form, key = key.split(".")
     else:
-        form = ''
+        form = ""
     return (_sort_keys(form), _sort_keys(key))
+
 
 class Solver(object):
     def __init__(self, input_config, form_list, prompt=None):
@@ -137,8 +140,8 @@ class Solver(object):
         self._field_dependencies = DependencyTracker()
         self._input_dependencies = DependencyTracker()
 
-        self._done_solving = False # Set to True if/when done solving
-        self._solved = False       # Set to True if/when successfully solved
+        self._done_solving = False  # Set to True if/when done solving
+        self._solved = False  # Set to True if/when successfully solved
 
     def _add_unattempted(self, unattempted):
         if isinstance(unattempted, list):
@@ -161,7 +164,7 @@ class Solver(object):
         form_name, form_instance = form.name_and_instance(form_name)
 
         if form_name not in self._form_map:
-            raise NotImplementedError(f'Form {form_name} is not supported.')
+            raise NotImplementedError(f"Form {form_name} is not supported.")
 
         new_form = self._form_map[form_name](solver=self, instance=form_instance)
 
@@ -188,7 +191,7 @@ class Solver(object):
         self._solving_fields |= set([f.name() for f in new_form.required_fields()])
 
     def _add_input_spec(self, input_name):
-        form_name, _ = input_name.split('.')
+        form_name, _ = input_name.split(".")
         self._add_form(form_name, input_only=True)
 
     def _attempt_input(self, input_name, needed_by):
@@ -218,7 +221,7 @@ class Solver(object):
                 # If this field is not even in the list of forms the solver is
                 # aware of, it must be in another form - find that form
                 if ud.dependency not in self._field_map:
-                    form_name, field_name = ud.dependency.split('.')
+                    form_name, field_name = ud.dependency.split(".")
                     self._add_form(form_name)
                 assert ud.dependency in self._field_map
                 self._add_unattempted(self._field_map[ud.dependency])
@@ -246,17 +249,23 @@ class Solver(object):
             self._add_unattempted(self._field_map[field_name])
         self._solving_fields |= set(field_names)
 
-        while len(self._unattempted_fields) > 0 \
-                or self._input_dependencies.has_met() \
-                or (self._input_dependencies.has_unmet() and not self._refused_input) \
-                or self._field_dependencies.has_met():
+        while (
+            len(self._unattempted_fields) > 0
+            or self._input_dependencies.has_met()
+            or (self._input_dependencies.has_unmet() and not self._refused_input)
+            or self._field_dependencies.has_met()
+        ):
 
             while len(self._unattempted_fields) > 0:
                 self._attempt_field(self._unattempted_fields.pop())
-            for field in sorted(self._field_dependencies.met_dependents(), key=sort_keys):
+            for field in sorted(
+                self._field_dependencies.met_dependents(), key=sort_keys
+            ):
                 self._attempt_field(field)
             if not self._refused_input:
-                for input_name in sorted(self._input_dependencies.unmet_dependencies(), key=sort_keys):
+                for input_name in sorted(
+                    self._input_dependencies.unmet_dependencies(), key=sort_keys
+                ):
                     needed_by = self._input_dependencies.unmet_dependents(input_name)
                     self._attempt_input(input_name, needed_by)
                     if self._refused_input:
@@ -273,9 +282,11 @@ class Solver(object):
 
         self._done_solving = True
 
-        if not self._field_dependencies.has_unmet() \
-                and not self._input_dependencies.has_unmet() \
-                and len(self._unimplemented_fields) == 0:
+        if (
+            not self._field_dependencies.has_unmet()
+            and not self._input_dependencies.has_unmet()
+            and len(self._unimplemented_fields) == 0
+        ):
             self._solved = True
 
         return self._solved

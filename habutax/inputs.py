@@ -2,6 +2,7 @@ from collections.abc import MutableMapping
 import configparser
 import re
 
+
 class Input(object):
     def __init__(self, name, description=None):
         assert "." not in name
@@ -20,7 +21,7 @@ class Input(object):
         return self._name
 
     def name(self):
-        return f'{self.section()}.{self.base_name()}'
+        return f"{self.section()}.{self.base_name()}"
 
     def help(self):
         return self._description
@@ -38,24 +39,27 @@ class Input(object):
             return False
         return True
 
+
 class StringInput(Input):
     def format_suggestion(self):
-        return ''
+        return ""
 
     def value(self, string):
         return string.strip()
 
+
 class BooleanInput(Input):
     def format_suggestion(self):
-        return 'Input one of y[es] or n[o]'
+        return "Input one of y[es] or n[o]"
 
     def value(self, string):
         string = string.strip().lower()
-        if string in ['true', 'yes', 'y', '1', 'on']:
+        if string in ["true", "yes", "y", "1", "on"]:
             return True
-        if string in ['false', 'no', 'n', '0', 'off']:
+        if string in ["false", "no", "n", "0", "off"]:
             return False
-        raise ValueError(f'Invalid boolean value: {string}')
+        raise ValueError(f"Invalid boolean value: {string}")
+
 
 class IntegerInput(Input):
     def format_suggestion(self):
@@ -67,6 +71,7 @@ class IntegerInput(Input):
             return 0
         return int(string)
 
+
 class FloatInput(Input):
     def format_suggestion(self):
         return "Input must be a floating point number"
@@ -76,6 +81,7 @@ class FloatInput(Input):
         if len(string) == 0:
             return 0.0
         return float(string)
+
 
 class EnumInput(StringInput):
     def __init__(self, name, enum, allow_empty=False, description=None):
@@ -89,7 +95,7 @@ class EnumInput(StringInput):
 
     def format_suggestion(self):
         empty = "empty or " if self.allow_empty else ""
-        suggestion = f'Input must be {empty}one of (in quotes):\n'
+        suggestion = f"Input must be {empty}one of (in quotes):\n"
         for k, v in self.enum.__members__.items():
             suggestion += f' * "{k}": {v.value}\n'
         return suggestion.strip()
@@ -121,6 +127,7 @@ class EnumInput(StringInput):
             return None
         return self.enum[string]
 
+
 class RegexInput(StringInput):
     def __init__(self, name, regex, description=""):
         self._regex_str = regex
@@ -128,7 +135,7 @@ class RegexInput(StringInput):
         super().__init__(name, description=description)
 
     def format_suggestion(self):
-        return f'Input must match the regular expression {self._regex_str}'
+        return f"Input must match the regular expression {self._regex_str}"
 
     def valid(self, string):
         try:
@@ -137,6 +144,7 @@ class RegexInput(StringInput):
             return False
 
         return bool(self._regex.match(v))
+
 
 class SSNInput(StringInput):
     def value(self, string):
@@ -159,11 +167,15 @@ class SSNInput(StringInput):
                 return False
         return True
 
+
 class MissingInputSpecification(Exception):
-    def __init__(self, input_name, message_fmt="Missing input specification for {input_name}"):
+    def __init__(
+        self, input_name, message_fmt="Missing input specification for {input_name}"
+    ):
         self.input_name = input_name
         self.message = message_fmt.format(input_name=input_name)
         super().__init__(self.message)
+
 
 class MissingInput(Exception):
     def __init__(self, input_name, message_fmt="Unsupplied Input: {input_name}"):
@@ -171,12 +183,19 @@ class MissingInput(Exception):
         self.message = message_fmt.format(input_name=input_name)
         super().__init__(self.message)
 
+
 class InvalidInput(Exception):
-    def __init__(self, input_name, invalid_value, message_fmt="Invalid Input: {input_name} (currently: '{value}')"):
+    def __init__(
+        self,
+        input_name,
+        invalid_value,
+        message_fmt="Invalid Input: {input_name} (currently: '{value}')",
+    ):
         self.input_name = input_name
         self.value = invalid_value
         self.message = message_fmt.format(input_name=input_name, value=invalid_value)
         super().__init__(self.message)
+
 
 class InputStore(MutableMapping):
     def __init__(self, input_config, input_specs={}):
@@ -189,7 +208,7 @@ class InputStore(MutableMapping):
         self.input_specs = input_specs
 
     def write(self, filename):
-        with open(filename, 'w') as outfile:
+        with open(filename, "w") as outfile:
             self.config.write(outfile)
 
     def update_input_spec(self, input_specs):

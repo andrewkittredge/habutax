@@ -1,17 +1,21 @@
 from collections.abc import Mapping
 from enum import IntEnum, auto, unique
 
-from habutax.inputs import (StringInput,
-                            BooleanInput,
-                            IntegerInput,
-                            FloatInput,
-                            EnumInput,
-                            SSNInput)
-from habutax.fields import (StringField,
-                            BooleanField,
-                            IntegerField,
-                            FloatField,
-                            EnumField)
+from habutax.inputs import (
+    StringInput,
+    BooleanInput,
+    IntegerInput,
+    FloatInput,
+    EnumInput,
+    SSNInput,
+)
+from habutax.fields import (
+    StringField,
+    BooleanField,
+    IntegerField,
+    FloatField,
+    EnumField,
+)
 
 
 class AutoNumber(IntEnum):
@@ -79,16 +83,18 @@ class Jurisdiction(AutoNumber):
 
 
 class Form(object):
-    def __init__(self,
-                 child_cls,
-                 inputs,
-                 required_fields,
-                 optional_fields,
-                 thresholds={},
-                 pdf_fields=[],
-                 pdf_file=None,
-                 instance=None,
-                 solver=None):
+    def __init__(
+        self,
+        child_cls,
+        inputs,
+        required_fields,
+        optional_fields,
+        thresholds={},
+        pdf_fields=[],
+        pdf_file=None,
+        instance=None,
+        solver=None,
+    ):
 
         self._name = child_cls.form_name
         assert "." not in self._name
@@ -111,10 +117,10 @@ class Form(object):
         if self._instance is None:
             return self._name
         else:
-            return f'{self._name}:{self._instance}'
+            return f"{self._name}:{self._instance}"
 
     def full_description(self):
-        return f'{self.__class__.description}: {self.__class__.long_description}'
+        return f"{self.__class__.description}: {self.__class__.long_description}"
 
     def instance(self):
         return self._instance
@@ -133,19 +139,27 @@ class Form(object):
         return self.required_fields() + self._optional_fields
 
     def threshold(self, name, requested_key=None):
-        assert name in self._thresholds, f'No threshold named "{name}" was found for form {self.name()}'
+        assert (
+            name in self._thresholds
+        ), f'No threshold named "{name}" was found for form {self.name()}'
         t = self._thresholds[name]
         if isinstance(t, dict):
-            assert requested_key is not None, f'Threshold "{name}" for form {self.name()} requires requested key to be supplied, but it was not'
+            assert (
+                requested_key is not None
+            ), f'Threshold "{name}" for form {self.name()} requires requested key to be supplied, but it was not'
             for key, value in t.items():
                 if isinstance(key, type(requested_key)):
                     if key == requested_key:
                         return value
                 elif requested_key in key:
                     return value
-            assert False, f'Threshold "{name}" not found for requested key {requested_key} for form {self.name()}'
+            assert (
+                False
+            ), f'Threshold "{name}" not found for requested key {requested_key} for form {self.name()}'
         else:
-            assert requested_key is None, f'Threshold "{name}" for form {self.name()} did not expect a requested key to be supplied'
+            assert (
+                requested_key is None
+            ), f'Threshold "{name}" for form {self.name()} did not expect a requested key to be supplied'
             return t
 
     def pdf_fields(self):
@@ -162,10 +176,7 @@ class InputForm(Form):
     """Convenience class to create a form which creates fields for each
     input"""
 
-    def __init__(self,
-                 child_cls,
-                 inputs,
-                 **kwargs):
+    def __init__(self, child_cls, inputs, **kwargs):
 
         fields = []
         for i in inputs:
@@ -185,7 +196,7 @@ class InputForm(Form):
             elif type(i) is EnumInput:
                 fields.append(EnumField(base_name, i.enum, fn))
             else:
-                raise TypeError(f'Unexpected input type in InputForm: {type(i)}')
+                raise TypeError(f"Unexpected input type in InputForm: {type(i)}")
 
         super().__init__(child_cls, inputs, fields, [], **kwargs)
 
@@ -203,7 +214,7 @@ class FormAccessor(Mapping):
 
     def __getitem__(self, key):
         if "." not in key:
-            key = f'{self.form.name()}.{key}'
+            key = f"{self.form.name()}.{key}"
         return self.mapping[key]
 
     def __iter__(self):
@@ -214,10 +225,12 @@ class FormAccessor(Mapping):
 
 
 def name_and_instance(full_form_name):
-    split_form_name = full_form_name.split(':')
+    split_form_name = full_form_name.split(":")
     form_instance = None
     if len(split_form_name) == 2:
         form_instance = split_form_name[1]
     elif len(split_form_name) != 1:
-        raise RuntimeError(f'Unexpected form name: {full_form_name} (expected 0 or 1 colons)')
+        raise RuntimeError(
+            f"Unexpected form name: {full_form_name} (expected 0 or 1 colons)"
+        )
     return split_form_name[0], form_instance

@@ -1708,7 +1708,6 @@ TAX_TABLE = (
 
 TAX_WORKSHEET_VALUES = (
     # income min (inclusive), income max (exclusive), multiplication amount (b), subtraction amount (d)
-
     # Single
     (
         (100000, 164925, 0.24, 5979.00),
@@ -1716,7 +1715,6 @@ TAX_WORKSHEET_VALUES = (
         (209425, 523600, 0.35, 25455.75),
         (523600, 1000000000000, 0.37, 35927.75),
     ),
-
     # Married filing jointly or Qualifying widow(er)
     (
         (100000, 172750, 0.22, 8503.00),
@@ -1741,6 +1739,7 @@ TAX_WORKSHEET_VALUES = (
     ),
 )
 
+
 def figure_tax_table(taxable_amount, filing_status_column):
     for row in TAX_TABLE:
         if taxable_amount >= row[0] and taxable_amount < row[1]:
@@ -1749,19 +1748,24 @@ def figure_tax_table(taxable_amount, filing_status_column):
     # If we got here, something went wrong
     assert False
 
+
 def figure_tax_worksheet(taxable_amount, filing_status_index):
-    for row in TAX_WORKSHEET_VALUES[filing_status_index-2]:
+    for row in TAX_WORKSHEET_VALUES[filing_status_index - 2]:
         if taxable_amount >= row[0] and taxable_amount <= row[1]:
             return taxable_amount * row[2] - row[3]
 
     # If we got here, something went wrong
     assert False
 
+
 def figure_tax(taxable_amount, filing_status):
     filing_status_index = None
     if filing_status is filing_status.Single:
         filing_status_index = 2
-    elif filing_status in [filing_status.MarriedFilingJointly, filing_status.QualifyingWidowWidower]:
+    elif filing_status in [
+        filing_status.MarriedFilingJointly,
+        filing_status.QualifyingWidowWidower,
+    ]:
         filing_status_index = 3
     elif filing_status is filing_status.MarriedFilingSeparately:
         filing_status_index = 4

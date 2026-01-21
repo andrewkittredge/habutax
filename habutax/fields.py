@@ -1,12 +1,19 @@
 from types import MethodType
 
+
 class FieldNotImplemented(Exception):
-    def __init__(self, field_name, message_fmt="Encountered unimplemented tax scenario when processing {field_name}", detailed=None):
+    def __init__(
+        self,
+        field_name,
+        message_fmt="Encountered unimplemented tax scenario when processing {field_name}",
+        detailed=None,
+    ):
         self.field_name = field_name
         self.message = message_fmt.format(field_name=field_name)
         if detailed is not None:
-            self.message += f': {detailed}'
+            self.message += f": {detailed}"
         super().__init__(self.message)
+
 
 class Field(object):
     def __init__(self, name):
@@ -33,7 +40,7 @@ class Field(object):
         return self._name
 
     def name(self):
-        return f'{self._form.name()}.{self._name}'
+        return f"{self._form.name()}.{self._name}"
 
     def not_implemented(self, detailed=None):
         """Can be called by a field it encounters a scenario which it does not
@@ -49,6 +56,7 @@ class Field(object):
     def from_string(self, string):
         raise NotImplementedError()
 
+
 class TypedField(Field):
     def __init__(self, name, value_fn, _type):
         self._value = MethodType(value_fn, self)
@@ -60,8 +68,11 @@ class TypedField(Field):
         if v is None or isinstance(v, str) and v.strip() == "":
             return self._empty_value
         elif type(v) is not self._type:
-            raise TypeError(f'Field named {self.name()} expected to produce type {self._type}, but found {type(v)}.')
+            raise TypeError(
+                f"Field named {self.name()} expected to produce type {self._type}, but found {type(v)}."
+            )
         return v
+
 
 class BasicTypedField(TypedField):
     def to_string(self, value):
@@ -70,10 +81,12 @@ class BasicTypedField(TypedField):
     def from_string(self, string):
         return self._type(string)
 
+
 class StringField(BasicTypedField):
     def __init__(self, name, value_fn):
         self._empty_value = ""
         super().__init__(name, value_fn, str)
+
 
 class BooleanField(BasicTypedField):
     def __init__(self, name, value_fn):
@@ -81,12 +94,14 @@ class BooleanField(BasicTypedField):
         super().__init__(name, value_fn, bool)
 
     def from_string(self, string):
-        return string.strip().lower() == 'true'
+        return string.strip().lower() == "true"
+
 
 class IntegerField(BasicTypedField):
     def __init__(self, name, value_fn):
         self._empty_value = 0
         super().__init__(name, value_fn, int)
+
 
 class FloatField(BasicTypedField):
     def __init__(self, name, value_fn, places=2):
@@ -99,10 +114,11 @@ class FloatField(BasicTypedField):
         return round(value, self._places)
 
     def to_string(self, value):
-        return f'{value:.{self._places}f}'
+        return f"{value:.{self._places}f}"
 
     def from_string(self, string):
         return round(float(string), self._places)
+
 
 class EnumField(TypedField):
     def __init__(self, name, enum, value_fn):

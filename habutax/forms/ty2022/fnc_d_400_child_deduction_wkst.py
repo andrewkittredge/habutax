@@ -5,6 +5,7 @@ from habutax.form import Form, Jurisdiction
 from habutax.inputs import *
 from habutax.fields import *
 
+
 class FormNCD400ChildDeductionWkst(Form):
     form_name = "nc_d-400_child_deduction_wkst"
     tax_year = 2022
@@ -13,14 +14,16 @@ class FormNCD400ChildDeductionWkst(Form):
     jurisdiction = Jurisdiction.NC
 
     def __init__(self, **kwargs):
-        inputs = [
-        ]
+        inputs = []
 
         def deduction_per_child(self, i, v):
-            status = i['1040.filing_status']
-            federal_agi = v['2']
+            status = i["1040.filing_status"]
+            federal_agi = v["2"]
 
-            if status in [filing_status.MarriedFilingJointly, filing_status.QualifyingSurvivingSpouse]:
+            if status in [
+                filing_status.MarriedFilingJointly,
+                filing_status.QualifyingSurvivingSpouse,
+            ]:
                 if federal_agi <= 40000:
                     return 3000.0
                 elif federal_agi <= 60000:
@@ -50,7 +53,10 @@ class FormNCD400ChildDeductionWkst(Form):
                     return 500.0
                 else:
                     return 0.0
-            elif status in [filing_status.Single, filing_status.MarriedFilingSeparately]:
+            elif status in [
+                filing_status.Single,
+                filing_status.MarriedFilingSeparately,
+            ]:
                 if federal_agi <= 20000:
                     return 3000.0
                 elif federal_agi <= 30000:
@@ -69,15 +75,22 @@ class FormNCD400ChildDeductionWkst(Form):
                 self.not_implemented()
 
         optional_fields = [
-            StringField('1', lambda s, i, v: str(i['1040.filing_status'])),
-            FloatField('2', lambda s, i, v: v['nc_d-400.6'], places=0),
-            IntegerField('3', lambda s, i, v: sum([v[f'1040.dependent_{n}_ctc'] for n in range(i['1040.number_dependents'])])),
-            FloatField('4', deduction_per_child, places=0),
-            FloatField('5', lambda s, i, v: v['3'] * v['4'], places=0),
+            StringField("1", lambda s, i, v: str(i["1040.filing_status"])),
+            FloatField("2", lambda s, i, v: v["nc_d-400.6"], places=0),
+            IntegerField(
+                "3",
+                lambda s, i, v: sum(
+                    [
+                        v[f"1040.dependent_{n}_ctc"]
+                        for n in range(i["1040.number_dependents"])
+                    ]
+                ),
+            ),
+            FloatField("4", deduction_per_child, places=0),
+            FloatField("5", lambda s, i, v: v["3"] * v["4"], places=0),
         ]
 
-        required_fields = [
-        ]
+        required_fields = []
 
         super().__init__(__class__, inputs, required_fields, optional_fields, **kwargs)
 

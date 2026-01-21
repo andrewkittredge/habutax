@@ -4,6 +4,7 @@ from habutax.form import Form, Jurisdiction
 from habutax.inputs import *
 from habutax.fields import *
 
+
 class FormNCD400ConsumerUseTaxWkst(Form):
     form_name = "nc_d-400_consumer_use_tax_wkst"
     tax_year = 2022
@@ -13,13 +14,31 @@ class FormNCD400ConsumerUseTaxWkst(Form):
 
     def __init__(self, **kwargs):
         inputs = [
-            BooleanInput('full_records', description="Do you have records of out-of-state (NC) purchases your or your spouse made for tax year 2022?"),
-            FloatInput('out_of_state_purchases_pre_oct', description="Enter the total amount of out-of-state purchases, including delivery charges, for 1/1/2022 through 9/30/2022"),
-            FloatInput('county_tax_pct_pre_oct', description="Enter '0.075' for Durham and Orange Counties; '0.0725' for Mecklenburg or Wake Counties; '0.07' for Alexander, Anson, Ashe, Bertie, Buncombe, Cabarrus, Catawba, Chatham, Cherokee, Clay, Cumberland, Davidson, Duplin, Edgecombe, Forsyth, Gaston, Graham, Greene, Halifax, Harnett, Haywood, Hertford, Jackson, Jones, Lee, Lincoln, Madison, Martin, Montgomery, Moore, New Hanover, Onslow, Pasquotank, Pitt, Randolph, Robeson, Rockingham, Rowan, Rutherford, Sampson, Stanly, Surry, Swain, and Wilkes Counties; and '0.0675' for all other North Carolina counties"),
-            FloatInput('out_of_state_purchases_post_oct', description="Enter the total amount of out-of-state purchases, including delivery charges, for 10/1/2022 through 12/31/2022"),
-            FloatInput('county_tax_pct_post_oct', description="Enter '0.075' for Durham and Orange Counties; '0.0725' for Mecklenburg or Wake Counties; '0.07' for Alexander, Alleghany, Anson, Ashe, Bertie, Buncombe, Cabarrus, Catawba, Chatham, Cherokee, Clay, Cumberland, Davidson, Duplin, Edgecombe, Forsyth, Gaston, Graham, Greene, Halifax, Harnett, Haywood, Hertford, Jackson, Jones, Lee, Lincoln, Madison, Martin, Montgomery, Moore, New Hanover, Onslow, Pasquotank, Pitt, Randolph, Robeson, Rockingham, Rowan, Rutherford, Sampson, Stanly, Surry, Swain, and Wilkes Counties; and '0.0675' for all other North Carolina counties"),
+            BooleanInput(
+                "full_records",
+                description="Do you have records of out-of-state (NC) purchases your or your spouse made for tax year 2022?",
+            ),
+            FloatInput(
+                "out_of_state_purchases_pre_oct",
+                description="Enter the total amount of out-of-state purchases, including delivery charges, for 1/1/2022 through 9/30/2022",
+            ),
+            FloatInput(
+                "county_tax_pct_pre_oct",
+                description="Enter '0.075' for Durham and Orange Counties; '0.0725' for Mecklenburg or Wake Counties; '0.07' for Alexander, Anson, Ashe, Bertie, Buncombe, Cabarrus, Catawba, Chatham, Cherokee, Clay, Cumberland, Davidson, Duplin, Edgecombe, Forsyth, Gaston, Graham, Greene, Halifax, Harnett, Haywood, Hertford, Jackson, Jones, Lee, Lincoln, Madison, Martin, Montgomery, Moore, New Hanover, Onslow, Pasquotank, Pitt, Randolph, Robeson, Rockingham, Rowan, Rutherford, Sampson, Stanly, Surry, Swain, and Wilkes Counties; and '0.0675' for all other North Carolina counties",
+            ),
+            FloatInput(
+                "out_of_state_purchases_post_oct",
+                description="Enter the total amount of out-of-state purchases, including delivery charges, for 10/1/2022 through 12/31/2022",
+            ),
+            FloatInput(
+                "county_tax_pct_post_oct",
+                description="Enter '0.075' for Durham and Orange Counties; '0.0725' for Mecklenburg or Wake Counties; '0.07' for Alexander, Alleghany, Anson, Ashe, Bertie, Buncombe, Cabarrus, Catawba, Chatham, Cherokee, Clay, Cumberland, Davidson, Duplin, Edgecombe, Forsyth, Gaston, Graham, Greene, Halifax, Harnett, Haywood, Hertford, Jackson, Jones, Lee, Lincoln, Madison, Martin, Montgomery, Moore, New Hanover, Onslow, Pasquotank, Pitt, Randolph, Robeson, Rockingham, Rowan, Rutherford, Sampson, Stanly, Surry, Swain, and Wilkes Counties; and '0.0675' for all other North Carolina counties",
+            ),
             # TODO post-10/1/2022 out-of-state-purchases
-            FloatInput('other_state_sales_tax', description="Enter the amount of sales tax legally and properly paid to another state or North Carolina on your out-of-state purchases."),
+            FloatInput(
+                "other_state_sales_tax",
+                description="Enter the amount of sales tax legally and properly paid to another state or North Carolina on your out-of-state purchases.",
+            ),
         ]
 
         def estimate(self, i, v):
@@ -56,24 +75,41 @@ class FormNCD400ConsumerUseTaxWkst(Form):
                 (45200, 30),
             ]
             for max_taxable_income, use_tax in use_tax_table:
-                if v['nc_d-400.14'] < max_taxable_income:
+                if v["nc_d-400.14"] < max_taxable_income:
                     return float(use_tax)
-            assert v['nc_d-400.14'] >= 45200
-            return v['nc_d-400.14'] * 0.000675
+            assert v["nc_d-400.14"] >= 45200
+            return v["nc_d-400.14"] * 0.000675
 
         optional_fields = [
-            FloatField('estimate', estimate, places=0),
-            FloatField('1', lambda s, i, v: i['out_of_state_purchases_pre_oct'], places=0),
-            FloatField('2', lambda s, i, v: i['county_tax_pct_pre_oct'] * v['1'], places=0),
-            FloatField('3', lambda s, i, v: i['out_of_state_purchases_post_oct'], places=0),
-            FloatField('4', lambda s, i, v: i['county_tax_pct_post_oct'] * v['3'], places=0),
-            FloatField('5', lambda s, i, v: min(i['other_state_sales_tax'], v['2'] + v['4']), places=0),
-            FloatField('6', lambda s, i, v: round(v['2'] + v['4'] - v['5'], 0), places=0),
-            FloatField('consumer_use_tax', lambda s, i, v: v['6'] if i['full_records'] else v['estimate'], places=0),
+            FloatField("estimate", estimate, places=0),
+            FloatField(
+                "1", lambda s, i, v: i["out_of_state_purchases_pre_oct"], places=0
+            ),
+            FloatField(
+                "2", lambda s, i, v: i["county_tax_pct_pre_oct"] * v["1"], places=0
+            ),
+            FloatField(
+                "3", lambda s, i, v: i["out_of_state_purchases_post_oct"], places=0
+            ),
+            FloatField(
+                "4", lambda s, i, v: i["county_tax_pct_post_oct"] * v["3"], places=0
+            ),
+            FloatField(
+                "5",
+                lambda s, i, v: min(i["other_state_sales_tax"], v["2"] + v["4"]),
+                places=0,
+            ),
+            FloatField(
+                "6", lambda s, i, v: round(v["2"] + v["4"] - v["5"], 0), places=0
+            ),
+            FloatField(
+                "consumer_use_tax",
+                lambda s, i, v: v["6"] if i["full_records"] else v["estimate"],
+                places=0,
+            ),
         ]
 
-        required_fields = [
-        ]
+        required_fields = []
 
         super().__init__(__class__, inputs, required_fields, optional_fields, **kwargs)
 
